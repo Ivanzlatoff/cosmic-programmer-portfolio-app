@@ -32,7 +32,7 @@ app.get("/api/timestamp", (req, res) => {
 
 app.get("/api/timestamp/:date_string", (req, res) => {
     let dateString = req.params.date_string;
-    let passedInValue = new Date(dateString)
+    let passedInValue = new Date(parseInt(dateString))
 
     if (passedInValue == "Invalid Date") {
         res.json({"error": "Invalid Date"})

@@ -32,7 +32,13 @@ app.get("/api/timestamp", (req, res) => {
 
 app.get("/api/timestamp/:date_string", (req, res) => {
     let dateString = req.params.date_string;
-    let passedInValue = new Date(parseInt(dateString))
+
+    if (dateString.match(/^\d+$/)) {
+        let unixTime = new Date(parseInt(dateString))
+        res.json({"unix": unixTime.getTime(), "utc": unixTime.toUTCString()})
+    }
+
+    let passedInValue = new Date(dateString)
 
     if (passedInValue == "Invalid Date") {
         res.json({"error": "Invalid Date"})

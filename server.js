@@ -57,8 +57,8 @@ app.get("/api/timestamp/:date_string", (req, res) => {
 app.enable('trust proxy')
 app.get("/api/whoami", (req, res) => {
     res.json({"ipaddress": req.ip,
-            "language": req.get("Accept-Language"),
-            "software": req.get("User-Agent")
+            "language": req.headers["accept-language"],
+            "software": req.headers["user-agent"]
         })
 })
 

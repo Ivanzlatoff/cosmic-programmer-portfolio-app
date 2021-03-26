@@ -19,6 +19,13 @@ app.get("/", function (req, res) {
   res.sendFile(__dirname + '/views/index.html');
 });
 
+app.get("/timestamp", function (req, res) {
+  res.sendFile(__dirname + '/views/timestamp.html');
+});
+
+app.get("/requestHeaderParser", (req, res) => {
+    res.sendFile(__dirname + '/views/requestHeaderParser.html');
+})
 
 // your first API endpoint...
 app.get("/api/hello", function (req, res) {
@@ -45,6 +52,14 @@ app.get("/api/timestamp/:date_string", (req, res) => {
     } else {
         res.json({"unix": passedInValue.getTime(), "utc": passedInValue.toUTCString()})
     }
+})
+
+app.enable('trust proxy')
+app.get("/api/whoami", (req, res) => {
+    res.json({"ipaddress": req.ip,
+            "language": req.get("Accept-Language"),
+            "software": req.get("User-Agent")
+        })
 })
 
 // listen for requests :)

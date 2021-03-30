@@ -10,6 +10,7 @@ var bodyParser = require('body-parser');
 var shortid = require('shortid');
 require('dotenv').config();
 
+mongoose.Promise = global.Promise;
 mongoose.connect(process.env.DB_URI, {
     useNewUrlParser: true,
     useUnifiedTopology: true,

@@ -1,6 +1,5 @@
 // server.js
 // where your node app starts
-var database_uri = "mongodb+srv://cosmicProgrammer:MongoDB*113495@freecodecamp.5thxi.mongodb.net/db1?retryWrites=true&w=majority"
 // init project
 var express = require('express');
 var app = express();
@@ -9,8 +8,13 @@ var mongo = require('mongodb');
 var mongoose = require('mongoose');
 var bodyParser = require('body-parser');
 var shortid = require('shortid');
+require('dotenv').config();
 
-mongoose.connect(database_uri, {useNewUrlParser: true, useUnifiedTopology: true})
+mongoose.connect(process.env.DB_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+    useFindAndModify: false
+    });
 
 // enable CORS (https://en.wikipedia.org/wiki/Cross-origin_resource_sharing)
 // so that your API is remotely testable by FCC
@@ -95,28 +99,26 @@ app.post("/api/shorturl/new", (req, res) => {
     let newShortURL = suffix
 
     let newURL = new ShortURL({
-        short_url: __dirname + "/api/shorturl/" + suffix,
-        original_url: client_requested_url,
-        suffix: suffix
+        short_url: suffix,
+        original_url: client_requested_url
     })
 
     newURL.save((err, doc) => {
         if (err) return console.log(err);
         console.log("Document inserted succesfully!")
         res.json({
-            "saved": true,
             "short_url": newURL.short_url,
             "original_url": newURL.original_url,
-            "suffix": newURL.suffix
         });
     });
 })
 
 app.get("/api/shorturl/:suffix", (req, res) => {
     let userGeneratedSuffix = req.params.suffix
-    ShortURL.find({suffix: userGeneratedSuffix}).then(foundUrls => {
+    console.log(userGeneratedSuffix)
+    ShortURL.find({short_url: userGeneratedSuffix}).then(foundUrls => {
         let urlForRedirect = foundUrls[0];
-        res.redirect(urlForRedirect.original_url);
+        res.redirect(urlForRedirect.original_url)
     });
 })
 

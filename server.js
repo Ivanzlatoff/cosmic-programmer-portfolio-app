@@ -1,15 +1,16 @@
 // server.js
 // where your node app starts
 // init project
+require('dotenv').config();
 var express = require('express');
-var path = require('path')
+var path = require('path');
 var app = express();
 var port = process.env.PORT || 3000;
 var mongo = require('mongodb');
 var mongoose = require('mongoose');
 var bodyParser = require('body-parser');
 var shortid = require('shortid');
-require('dotenv').config();
+
 
 mongoose.Promise = global.Promise;
 mongoose.connect(process.env.DB_URI, {

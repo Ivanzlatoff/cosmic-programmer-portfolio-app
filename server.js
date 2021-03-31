@@ -87,27 +87,36 @@ app.get("/api/whoami", (req, res) => {
 // Build a schema and model to store saved URLS
 const ShortURL = mongoose.model('ShortURL', new mongoose.Schema({
     short_url: String,
-    original_url: String,
-    suffix: String }));
-// parse application/x-www-form-urlencoded
-app.use(bodyParser.urlencoded({ extended: false }))
+    original_url: String
+}));
 
 // parse application/json
 app.use(bodyParser.json())
 
-app.post("/api/shorturl/new", (req, res) => {
+app.post("/api/shorturl/new",
+    bodyParser.urlencoded({ extended: false }),
+    (req, res) => {
 
     let client_requested_url = req.body.url
-    let suffix = shortid.generate()
-    let newShortURL = suffix
+
+    let urlRegex = new RegExp(/^(http|https)(:\/\/)/);
+
+    if (!client_requested_url.match(urlRegex)) {
+        res.json({ error: "invalid url" });
+        return;
+    }
+
+    let newShortURL = shortid.generate()
 
     let newURL = new ShortURL({
-        short_url: suffix,
+        short_url: newShortURL,
         original_url: client_requested_url
     })
 
     newURL.save((err, doc) => {
         if (err) return console.log(err);
+        console.log(doc.short_url, " <= short_url")
+        console.log(doc.original_url, " <= original_url")
         console.log("Document inserted succesfully!")
         res.json({
             "short_url": newURL.short_url,
@@ -116,12 +125,14 @@ app.post("/api/shorturl/new", (req, res) => {
     });
 })
 
-app.get("/api/shorturl/:suffix", (req, res) => {
-    let userGeneratedSuffix = req.params.suffix
-    console.log(userGeneratedSuffix)
-    ShortURL.find({short_url: userGeneratedSuffix}).then(foundUrls => {
-        let urlForRedirect = foundUrls[0];
-        res.redirect(urlForRedirect.original_url)
+app.get("/api/shorturl/:input", (req, res) => {
+    let input = req.params.input
+    ShortURL.findOne({short_url: input}, (err, result) => {
+        if (!err && result != undefined) {
+            res.redirect(result.original_url);
+        } else {
+            res.json("URL not found");
+        }
     });
 })
 

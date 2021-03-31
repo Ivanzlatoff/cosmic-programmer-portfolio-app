@@ -10,7 +10,9 @@ var mongo = require('mongodb');
 var mongoose = require('mongoose');
 var bodyParser = require('body-parser');
 var shortid = require('shortid');
-
+module.exports = {
+    mongoose
+};
 
 mongoose.Promise = global.Promise;
 mongoose.connect(process.env.DB_URI, {

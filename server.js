@@ -239,8 +239,9 @@ app.get("/api/exercise/log", (req, res) => {
         if (req.query.limit) {
             responseObject.log = responseObject.log.slice(0, req.query.limit);
         }
+
+        responseObject = responseObject.toJSON()
         responseObject["count"] = result.log.length;
-        console.log(responseObject["count"])
         res.json(responseObject);
     })
 })

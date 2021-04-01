@@ -27,7 +27,7 @@ var cors = require('cors');
 app.use(cors({optionsSuccessStatus: 200}));  // some legacy browsers choke on 204
 
 // http://expressjs.com/en/starter/static-files.html
-app.use(express.static('public'));
+app.use(express.static(__dirname + "/public"));
 
 // http://expressjs.com/en/starter/basic-routing.html
 app.get("/", function (req, res) {
@@ -44,6 +44,10 @@ app.get("/requestHeaderParser", (req, res) => {
 
 app.get("/urlShortenerMicroservice", (req, res) => {
     res.sendFile(__dirname + '/views/urlShortenerMicroservice.html');
+})
+
+app.get("/exerciseTracker", (req, res) => {
+    res.sendFile(__dirname + '/views/exerciseTracker.html');
 })
 
 
@@ -117,8 +121,6 @@ app.post("/api/shorturl/new",
 
     newURL.save((err, doc) => {
         if (err) return console.log(err);
-        console.log(doc.short_url, " <= short_url")
-        console.log(doc.original_url, " <= original_url")
         console.log("Document inserted succesfully!")
         res.json({
             "short_url": newURL.short_url,
@@ -138,6 +140,114 @@ app.get("/api/shorturl/:input", (req, res) => {
     });
 })
 
+
+// Exercise tracker
+let exerciseSessionSchema = new mongoose.Schema({
+  description: { type: String, required: true },
+  duration: { type: Number, required: true },
+  date: String
+});
+
+let User = mongoose.model("User", new mongoose.Schema({
+  username: { type: String, required: true },
+  log: [exerciseSessionSchema]
+    })
+);
+
+let Session = mongoose.model("Session", exerciseSessionSchema);
+
+app.post("/api/exercise/new-user/",
+        bodyParser.urlencoded({ extended: false }),
+        (req, res) => {
+            let newUser = new User({ username: req.body.username });
+            newUser.save((err, savedUser) => {
+              if (err) return console.log(err);
+              res.json({
+                "username": savedUser.username,
+                "_id": savedUser["_id"]
+                });
+            });
+})
+
+app.get("/api/exercise/users", (req, res) => {
+  User.find({}, (err, allUsers) => {
+    if (err) return console.log(err)
+      res.json(allUsers);
+  });
+});
+
+app.post(
+    "/api/exercise/add",
+    bodyParser.urlencoded({extended: false}),
+    (req, res) => {
+        let newSession = new Session({
+            description: req.body.description,
+            duration: parseInt(req.body.duration),
+            date: req.body.date
+        });
+
+        if (newSession.date === "") {
+            newSession.date = new Date().toISOString().substring(0, 10);
+        }
+
+        User.findByIdAndUpdate(
+            req.body.userId,
+            {$push: {log: newSession}},
+            {new: true},
+            (err, updatedUser) => {
+                if (err) return console.log(err)
+                console.log(updatedUser)
+                res.json({
+                    "_id": updatedUser.id,
+                    "username": updatedUser.username,
+                    "date": new Date(newSession.date).toDateString(),
+                    "description": newSession.description,
+                    "duration": newSession.duration
+                })
+            }
+        )
+    }
+)
+
+app.get("/api/exercise/log", (req, res) => {
+    User.findById(req.query.userId, (err, result) => {
+        if (err) return console.log(err)
+        let responseObject = result
+        if (req.query.from || req.query.to) {
+            let fromDate = new Date(0);
+            let toDate = new Date();
+
+
+            if (req.query.from) {
+                fromDate = new Date(req.query.from);
+            }
+
+            if (req.query.to) {
+                toDate = new Date(req.query.to);
+            }
+
+            fromDate = fromDate.getTime();
+            toDate = toDate.getTime();
+
+            responseObject.log = responseObject.log.filter(session => {
+                let sessionDate = new Date(session.date).getTime();
+
+                return sessionDate >= fromDate && sessionDate <= toDate;
+            });
+        }
+
+        if (req.query.limit) {
+            responseObject.log = responseObject.log.slice(0, req.query.limit);
+        }
+        responseObject["count"] = result.log.length;
+        console.log(responseObject["count"])
+        res.json(responseObject);
+    })
+})
+
+app.get("/planes", function (req, res) {
+  res.sendFile(__dirname + '/views/planes.html');
+});
 
 // listen for requests :)
 var listener = app.listen(port, function () {

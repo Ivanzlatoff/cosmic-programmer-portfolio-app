@@ -10,6 +10,7 @@ var mongo = require('mongodb');
 var mongoose = require('mongoose');
 var bodyParser = require('body-parser');
 var shortid = require('shortid');
+let multer = require('multer');
 module.exports = {
     mongoose
 };
@@ -50,6 +51,9 @@ app.get("/exerciseTracker", (req, res) => {
     res.sendFile(__dirname + '/views/exerciseTracker.html');
 })
 
+app.get("/file-metadata-microservices", function (req, res) {
+  res.sendFile(__dirname + '/views//file-metadata-microservices.html');
+});
 
 // your first API endpoint...
 app.get("/api/hello", function (req, res) {
@@ -246,9 +250,13 @@ app.get("/api/exercise/log", (req, res) => {
     })
 })
 
-app.get("/planes", function (req, res) {
-  res.sendFile(__dirname + '/views/planes.html');
-});
+app.post('/api/fileanalyse', multer().single('upfile'), (req, res) => {
+    res.json({
+        "name" : req.file.originalname,
+        "type" : req.file.mimetype,
+        "size" : req.file.size
+    })
+})
 
 // listen for requests :)
 var listener = app.listen(port, function () {
